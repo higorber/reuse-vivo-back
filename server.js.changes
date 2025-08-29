@@ -1,0 +1,62 @@
+/*
+ * Para instalar as dependências necessárias:
+ * 1. Certifique-se de ter o Node.js instalado (versão 14 ou superior)
+ * 2. Instale as dependências do projeto:
+ *    npm install express body-parser @xenova/transformers
+ * 
+ * Para rodar o servidor:
+ * 1. Execute o comando: node server.js
+ * 2. O servidor estará disponível em http://localhost:3000
+ * 
+ * Para testar a rota no Postman ou CURL:
+ * 1. Envie uma requisição POST para http://localhost:3000/api/chat
+ * 2. O corpo da requisição deve ser um JSON no formato: { "message": "sua mensagem aqui" }
+ * 3. A resposta será um JSON no formato: { "response": "resposta do assistente" }
+ * 
+ * Exemplo com CURL:
+ * curl -X POST http://localhost:3000/api/chat \
+ *   -H "Content-Type: application/json" \
+ *   -d '{"message": "Quais são as tendências de moda para o verão?"}'
+ */
+app.post('/api/chat', async (req, res) => {
+    try {
+        const { message } = req.body;
+        
+        if (!message) {
+            return res.status(400).json({ error: 'Mensagem é obrigatória' });
+        }
+
+        // Importar o pipeline de transformers (carregará o modelo na primeira vez)
+        const { pipeline } = require('@xenova/transformers');
+        
+        // Carregar o modelo LLaMA3 3B (isso pode levar algum tempo na primeira execução)
+        // O modelo será baixado e armazenado em cache automaticamente
+        const generator = await pipeline('text-generation', 'Xenova/llama3-3b-tokenizer');
+        
+        // Definir o prompt do sistema
+        const systemPrompt = "Você é um assistente especializado em moda e customização de roupas. Responda de forma clara, detalhada e amigável em português.";
+        
+        // Formatar o prompt para o modelo
+        const prompt = `<|begin_of_text|><|start_header_id|>system<|end_header_id|>\n\n${systemPrompt}<|eot_id|><|start_header_id|>user<|end_header_id|>\n\n${message}<|eot_id|><|start_header_id|>assistant<|end_header_id|>`;
+        
+        // Gerar a resposta do modelo
+        const response = await generator(prompt, {
+            max_new_tokens: 300,
+            temperature: 0.7,
+            top_p: 0.9,
+            do_sample: true,
+        });
+        
+        // Extrair o texto da resposta
+        const responseText = response[0].generated_text.replace(prompt, '').trim();
+        
+        // Retornar a resposta em formato JSON
+        res.json({ response: responseText });
+        
+    } catch (error) {
+        console.error('Erro no chat:', error);
+        res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+});
+=======
+} // Closing brace for the chat route
