@@ -4,34 +4,54 @@ const bodyParser = require('body-parser');
 const session = require('express-session');
 const multer = require('multer');
 const fs = require('fs');
+const cors = require('cors');
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000;
 
-// Middleware para análise de corpo de requisições
+// ----------------------
+// CONFIGURAÇÃO DO CORS
+// ----------------------
+app.use(cors({
+    origin: [
+        'http://127.0.0.1:5500',
+        'http://localhost:5500',
+        'https://reuse-vivo.vercel.app' // 🔑 troque pela URL do seu front hospedado
+    ],
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    credentials: true
+}));
+
+// ----------------------
+// MIDDLEWARES
+// ----------------------
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
-// Servir arquivos estáticos da pasta front
+// Servir arquivos estáticos
 app.use(express.static(path.join(__dirname, '../front')));
-
-// Servir arquivos estáticos da pasta image
 app.use('/image', express.static(path.join(__dirname, '../image')));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Configuração da sessão
+// ----------------------
+// CONFIGURAÇÃO DE SESSÃO
+// ----------------------
+const isProduction = process.env.NODE_ENV === 'production';
+
 app.use(session({
     secret: 'seu-segredo-aqui',
     resave: true,
     saveUninitialized: false,
     cookie: { 
-        secure: true,       // true em produção (https), false em local
-        sameSite: 'none',   // necessário para front/back em domínios diferentes
+        secure: isProduction, // true apenas no Render (https)
+        sameSite: isProduction ? 'none' : 'lax', 
         maxAge: 24 * 60 * 60 * 1000
     }
 }));
 
 
-// Configuração do Multer para upload de imagens
+// ----------------------
+// CONFIGURAÇÃO DO MULTER
+// ----------------------
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
         const uploadDir = path.join(__dirname, 'uploads/pecas');
@@ -49,10 +69,8 @@ const storage = multer.diskStorage({
 });
 
 const upload = multer({
-    storage: storage,
-    limits: {
-        fileSize: 5 * 1024 * 1024, // 5MB limite
-    },
+    storage,
+    limits: { fileSize: 5 * 1024 * 1024 },
     fileFilter: function (req, file, cb) {
         if (file.mimetype.startsWith('image/')) {
             cb(null, true);
