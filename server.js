@@ -24,10 +24,12 @@ app.use(session({
     resave: true,
     saveUninitialized: false,
     cookie: { 
-        secure: false, // Defina como true se estiver usando HTTPS
-        maxAge: 24 * 60 * 60 * 1000 // 24 horas
+        secure: true,       // true em produção (https), false em local
+        sameSite: 'none',   // necessário para front/back em domínios diferentes
+        maxAge: 24 * 60 * 60 * 1000
     }
 }));
+
 
 // Configuração do Multer para upload de imagens
 const storage = multer.diskStorage({
@@ -652,3 +654,4 @@ app.post('/api/chat', async (req, res) => {
 app.listen(port, () => {
     console.log(`Servidor rodando em http://localhost:${port}`);
 });
+
