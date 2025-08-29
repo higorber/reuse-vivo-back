@@ -15,7 +15,7 @@ app.use(cors({
     origin: [
         'http://127.0.0.1:5500',
         'http://localhost:5500',
-        'https://reuse-vivo.vercel.app' // 🔑 troque pela URL do seu front hospedado
+        'https://reuse-vivo-front.vercel.app' // 🔑 troque pela URL do seu front hospedado
     ],
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     credentials: true
@@ -672,4 +672,5 @@ app.post('/api/chat', async (req, res) => {
 app.listen(port, () => {
     console.log(`Servidor rodando em http://localhost:${port}`);
 });
+
 
